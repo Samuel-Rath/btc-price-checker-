@@ -78,6 +78,8 @@ Iteration 1 at 2026-01-04 12:00:00:
 
 After completion, a plot window appears with trends for all metrics.
 
+## Disclaimer it might take a while for the plot to load
+
 ## Limitations
 
 - Relies on CoinGecko API availability and rate limits (typically 50 calls/minute).
