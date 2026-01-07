@@ -4,12 +4,12 @@ import json
 import matplotlib.pyplot as plt
 from datetime import datetime
 
-# Function to fetch BTC data from CoinGecko API
-def fetch_btc_data():
+# Function to fetch current BTC data from CoinGecko API
+def fetch_current_btc_data():
     url = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=bitcoin"
     try:
         response = requests.get(url)
-        response.raise_for_status()  # Raise an error for bad status codes
+        response.raise_for_status()
         data = response.json()
         if data and isinstance(data, list):
             btc_data = data[0]
@@ -25,21 +25,46 @@ def fetch_btc_data():
             print("No data returned.")
             return None
     except requests.exceptions.RequestException as e:
-        print(f"Error fetching data: {e}")
+        print(f"Error fetching current data: {e}")
         return None
 
-# Main function to track BTC price and key factors, and plot charts
-def track_btc(interval_seconds=60, iterations=10):
-    timestamps = []
-    prices = []
-    market_caps = []
-    volumes_24h = []
+# Function to fetch historical BTC data from CoinGecko API
+def fetch_historical_btc_data(days=30):
+    if days <= 0:
+        return [], [], [], []
+    url = f"https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days={days}"
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        data = response.json()
+        timestamps = [datetime.fromtimestamp(ts / 1000).strftime("%Y-%m-%d %H:%M:%S") for ts, _ in data.get("prices", [])]
+        prices = [price for _, price in data.get("prices", [])]
+        market_caps = [mc for _, mc in data.get("market_caps", [])]
+        volumes_24h = [vol for _, vol in data.get("total_volumes", [])]
+        return timestamps, prices, market_caps, volumes_24h
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching historical data: {e}")
+        return [], [], [], []
+
+# Main function to track BTC price and key factors, with optional historical data
+def track_btc(interval_seconds=60, iterations=10, historical_days=30):
+    # Fetch historical data
+    hist_timestamps, hist_prices, hist_market_caps, hist_volumes_24h = fetch_historical_btc_data(historical_days)
+    
+    # Initialize lists with historical data (for plottable metrics)
+    timestamps = hist_timestamps[:]
+    prices = hist_prices[:]
+    market_caps = hist_market_caps[:]
+    volumes_24h = hist_volumes_24h[:]
+    
+    # Lists for metrics without historical data
     changes_24h = []
     circulating_supplies = []
     total_supplies = []
 
+    # Real-time tracking loop
     for i in range(iterations):
-        data = fetch_btc_data()
+        data = fetch_current_btc_data()
         if data:
             now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             timestamps.append(now)
@@ -59,7 +84,7 @@ def track_btc(interval_seconds=60, iterations=10):
     # Plot the charts if data was collected
     if timestamps:
         fig, axs = plt.subplots(3, 2, figsize=(12, 12))
-        fig.suptitle('BTC Key Metrics Over Time')
+        fig.suptitle('BTC Key Metrics Over Time (Including Historical Data)')
 
         # Price
         axs[0, 0].plot(timestamps, prices, marker='o')
@@ -79,20 +104,21 @@ def track_btc(interval_seconds=60, iterations=10):
         axs[1, 0].set_ylabel('Volume')
         axs[1, 0].tick_params(axis='x', rotation=45)
 
-        # 24h Change
-        axs[1, 1].plot(timestamps, changes_24h, marker='o', color='red')
+        # 24h Change (only real-time)
+        real_time_timestamps = timestamps[-iterations:] if iterations > 0 else []
+        axs[1, 1].plot(real_time_timestamps, changes_24h, marker='o', color='red')
         axs[1, 1].set_title('24h Price Change (%)')
         axs[1, 1].set_ylabel('Change (%)')
         axs[1, 1].tick_params(axis='x', rotation=45)
 
-        # Circulating Supply
-        axs[2, 0].plot(timestamps, circulating_supplies, marker='o', color='purple')
+        # Circulating Supply (only real-time)
+        axs[2, 0].plot(real_time_timestamps, circulating_supplies, marker='o', color='purple')
         axs[2, 0].set_title('Circulating Supply')
         axs[2, 0].set_ylabel('Supply')
         axs[2, 0].tick_params(axis='x', rotation=45)
 
-        # Total Supply
-        axs[2, 1].plot(timestamps, total_supplies, marker='o', color='brown')
+        # Total Supply (only real-time)
+        axs[2, 1].plot(real_time_timestamps, total_supplies, marker='o', color='brown')
         axs[2, 1].set_title('Total Supply')
         axs[2, 1].set_ylabel('Supply')
         axs[2, 1].tick_params(axis='x', rotation=45)
@@ -100,6 +126,6 @@ def track_btc(interval_seconds=60, iterations=10):
         plt.tight_layout()
         plt.show()
 
-# Example usage: Track every 60 seconds for 10 iterations and plot at the end
+# Example usage: Track with 30 days historical, every 60 seconds for 10 iterations
 if __name__ == "__main__":
-    track_btc()
+    track_btc(historical_days=30)
