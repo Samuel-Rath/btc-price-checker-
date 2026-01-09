@@ -20,6 +20,7 @@ The script then plots these metrics in a 3x2 grid of line charts for easy trend 
 - Visualizations of all key metrics over time using Matplotlib.
 - Uses a free, public API (CoinGecko) – no API key required.
 - Handles errors gracefully (e.g., network issues).
+- Price comparison compared to other altcoins.
 
 ## Requirements
 
