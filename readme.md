@@ -10,6 +10,7 @@ This Python script fetches real-time Bitcoin (BTC) price and key metrics from th
 - 24-hour price change (%)
 - Circulating supply
 - Total supply
+- Prediction based on historical data
 
 The script then plots these metrics in a 3x2 grid of line charts for easy trend analysis.
 
