@@ -1,8 +1,10 @@
+# Import required libraries 
 import requests
 import time
 import json
 import matplotlib.pyplot as plt
 from datetime import datetime
+
 
 # Function to fetch current BTC data from CoinGecko API
 def fetch_current_btc_data():
