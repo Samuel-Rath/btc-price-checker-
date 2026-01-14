@@ -4,7 +4,7 @@ import time
 import json
 import matplotlib.pyplot as plt
 from datetime import datetime
-
+import argparse  # Added for command-line argument parsing to streamline customization
 
 # Function to fetch current BTC data from CoinGecko API
 def fetch_current_btc_data():
@@ -128,6 +128,19 @@ def track_btc(interval_seconds=60, iterations=10, historical_days=30):
         plt.tight_layout()
         plt.show()
 
-# Example usage: Track with 30 days historical, every 60 seconds for 10 iterations
+# Parse command-line arguments to streamline configuration without editing code
+def parse_args():
+    parser = argparse.ArgumentParser(description="Track Bitcoin metrics with historical and real-time data.")
+    parser.add_argument("--interval", type=int, default=60, help="Interval in seconds between data fetches (default: 60)")
+    parser.add_argument("--iterations", type=int, default=10, help="Number of real-time data fetches (default: 10)")
+    parser.add_argument("--historical_days", type=int, default=30, help="Number of historical days to fetch (default: 30)")
+    return parser.parse_args()
+
+# Example usage: Parse args and track BTC
 if __name__ == "__main__":
-    track_btc(historical_days=30)
+    args = parse_args()
+    track_btc(
+        interval_seconds=args.interval,
+        iterations=args.iterations,
+        historical_days=args.historical_days
+    )
